@@ -1,7 +1,21 @@
+import logging
+
+
 class Logger:
     def __init__(self, process, log_file):
         self.process = process
         self.log_file = log_file
+
+        self.logger = logging.getLogger(log_file)
+        self.logger.setLevel(logging.DEBUG)
+
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - PID %(process)d - %(levelname)s - %(message)s',
+                                                    datefmt='%Y-%m-%d %H:%M:%S'))
+
+        self.logger.addHandler(file_handler)
+
 
     def log_output(self):
         with open(self.log_file, 'a') as f:
@@ -13,7 +27,7 @@ class Logger:
                     return
 
                 if stdout_line:
-                    f.write(stdout_line.decode())
+                    self.logger.info(stdout_line.decode().strip())
 
                 if stderr_line:
-                    f.write(stderr_line.decode())
+                    self.logger.error(stderr_line.decode().strip())
