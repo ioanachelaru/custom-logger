@@ -15,12 +15,22 @@ def run_process(cmd):
 
 def log_output(process, log_file):
     while True:
-        line = process.stdout.readline()
-        if not line:
-            break
+        # Log both stdout and stderr
+        stdout_line = process.stdout.readline()
+        stderr_line = process.stderr.readline()
+
+        if not stdout_line and not stderr_line:
+            return
+
         with open(log_file, 'a') as f:
-            f.write(line.decode())
-        print(line.decode(), end='')
+            if stdout_line:
+                f.write(stdout_line.decode())
+                print(stdout_line.decode(), end='')
+
+            if stderr_line:
+                f.write(stderr_line.decode())
+                print(stderr_line.decode(), end='')
+
 
 def main():
     cmds = [
