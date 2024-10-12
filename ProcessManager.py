@@ -14,10 +14,16 @@ class ProcessManager:
         self.threads = []
         self.temp_files = []
 
+
+    def cleanup(self):
+        for temp_file in self.temp_files:
+            Path(temp_file).unlink()
+
+
     def run(self):
         for cmd in self.cmds:
-            temp_file = tempfile.NamedTemporaryFile(delete=False)
-            self.temp_files.append(temp_file.name)
+            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                self.temp_files.append(temp_file.name)
 
             process_runner = ProcessRunner(cmd)
             process_runner.start()
@@ -30,3 +36,5 @@ class ProcessManager:
 
         for thread in self.threads:
             thread.join()
+
+        self.cleanup()

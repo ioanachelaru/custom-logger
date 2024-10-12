@@ -10,7 +10,7 @@ class Logger:
                 stderr_line = self.process.stderr.readline()
 
                 if not stdout_line and not stderr_line:
-                    break
+                    return
 
                 if stdout_line:
                     f.write(stdout_line.decode())
