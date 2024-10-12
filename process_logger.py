@@ -1,36 +1,4 @@
-import subprocess
-import threading
-import time
-import tempfile
-from pathlib import Path
-
-# Set the temp directory to root dir of current project
-tempfile.tempdir = Path(__file__).parent
-
-
-def run_process(cmd):
-    process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return process
-
-
-def log_output(process, log_file):
-    while True:
-        # Log both stdout and stderr
-        stdout_line = process.stdout.readline()
-        stderr_line = process.stderr.readline()
-
-        if not stdout_line and not stderr_line:
-            return
-
-        with open(log_file, 'a') as f:
-            if stdout_line:
-                f.write(stdout_line.decode())
-                print(stdout_line.decode(), end='')
-
-            if stderr_line:
-                f.write(stderr_line.decode())
-                print(stderr_line.decode(), end='')
-
+from ProcessManager import ProcessManager
 
 def main():
     cmds = [
@@ -38,26 +6,8 @@ def main():
         """python -c "import sys, time; print('Another start'); sys.stderr.write('Another warning\\n'); time.sleep(2); print('Another process'); sys.stderr.write('Another error message\\n')" """
     ]
 
-    # Store the threads we're about to start
-    threads = []
-
-    tmp_files = []
-
-    for cmd in cmds:
-        tmp_file = tempfile.NamedTemporaryFile(delete=False)
-        tmp_files.append(tmp_file.name)
-
-        process = run_process(cmd)
-
-        thread = threading.Thread(target=log_output, args=(process, tmp_file.name))
-        thread.start()
-
-        threads.append(thread)
-
-    # Wait for all threads to finish instead of sleeping,
-    # which would've not guaranteed synchronization
-    for thread in threads:
-        thread.join()
+    process_manager = ProcessManager(cmds)
+    process_manager.run()
 
 
 if __name__ == "__main__":
