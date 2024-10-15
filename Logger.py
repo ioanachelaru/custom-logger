@@ -52,3 +52,8 @@ class Logger:
 
     def can_be_deleted(self):
         return not self.found_warning_or_error
+
+    def close(self):
+        self.logger.removeHandler(self.file_handler)
+        self.file_handler.close()
+        self.logger.removeHandler(self.console_handler)
