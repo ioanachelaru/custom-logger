@@ -5,6 +5,7 @@ class Logger:
     def __init__(self, process, log_file):
         self.process = process
         self.log_file = log_file
+        self.found_warning_or_error = False
 
         self.logger = logging.getLogger(log_file)
         self.logger.setLevel(logging.DEBUG)
@@ -33,3 +34,6 @@ class Logger:
                     else:
                         self.logger.error(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
                     self.found_warning_or_error = True
+
+    def can_be_deleted(self):
+        return not self.found_warning_or_error

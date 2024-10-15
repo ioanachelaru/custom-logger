@@ -13,11 +13,13 @@ class ProcessManager:
         self.cmds = cmds
         self.threads = []
         self.temp_files = []
+        self.loggers = []
 
 
     def cleanup(self):
-        for temp_file in self.temp_files:
-            Path(temp_file).unlink()
+        for logger, temp_file in zip(self.loggers, self.temp_files):
+            if logger.can_be_deleted():
+                Path(temp_file).unlink()
 
 
     def run(self):
@@ -29,6 +31,8 @@ class ProcessManager:
             process_runner.start()
 
             logger = Logger(process_runner.get_process(), temp_file.name)
+            self.loggers.append(logger)
+
             thread = threading.Thread(target=logger.log_output)
             thread.start()
 
