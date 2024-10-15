@@ -11,9 +11,7 @@ class Logger:
 
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - PID %(process)d - %(levelname)s - %(message)s',
-                                                    datefmt='%Y-%m-%d %H:%M:%S'))
-
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         self.logger.addHandler(file_handler)
 
 
@@ -27,7 +25,11 @@ class Logger:
                     return
 
                 if stdout_line:
-                    self.logger.info(stdout_line.decode().strip())
+                    self.logger.info(f'PID {self.process.pid} - {stdout_line.decode().strip()}')
 
                 if stderr_line:
-                    self.logger.error(stderr_line.decode().strip())
+                    if "warning" in stderr_line.decode().lower():
+                        self.logger.warning(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
+                    else:
+                        self.logger.error(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
+                    self.found_warning_or_error = True
