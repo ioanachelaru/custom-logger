@@ -15,7 +15,6 @@ class Logger:
         file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         self.logger.addHandler(file_handler)
 
-
     def log_output(self):
         with open(self.log_file, 'a') as f:
             while True:
@@ -26,14 +25,20 @@ class Logger:
                     return
 
                 if stdout_line:
-                    self.logger.info(f'PID {self.process.pid} - {stdout_line.decode().strip()}')
-
+                    self._log_stdout(stdout_line)
                 if stderr_line:
-                    if "warning" in stderr_line.decode().lower():
-                        self.logger.warning(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
-                    else:
-                        self.logger.error(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
                     self.found_warning_or_error = True
+                    self._log_stderr(stderr_line)
+
+    def _log_stdout(self, stdout_line):
+        self.logger.info(f'PID {self.process.pid} - {stdout_line.decode().strip()}')
+
+    def _log_stderr(self, stderr_line):
+        decoded_line = stderr_line.decode().lower()
+        if "warning" in decoded_line:
+            self.logger.warning(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
+        else:
+            self.logger.error(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
 
     def can_be_deleted(self):
         return not self.found_warning_or_error
