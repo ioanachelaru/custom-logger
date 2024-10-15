@@ -1,4 +1,7 @@
 import logging
+from Utils import read_from_csv
+
+FILTERS_FILE = 'filters.csv'
 
 
 class Logger:
@@ -6,14 +9,21 @@ class Logger:
         self.process = process
         self.log_file = log_file
         self.found_warning_or_error = False
+        self.filters = read_from_csv(FILTERS_FILE)
 
         self.logger = logging.getLogger(log_file)
         self.logger.setLevel(logging.DEBUG)
 
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-        self.logger.addHandler(file_handler)
+        self.file_handler = logging.FileHandler(log_file)
+        self.file_handler.setLevel(logging.DEBUG)
+        self.file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+        self.logger.addHandler(self.file_handler)
+
+        self.console_handler = logging.StreamHandler()
+        self.console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+        self.console_handler.addFilter(
+            lambda record: any(keyword in record.getMessage().lower() for keyword in self.filters))
+        self.logger.addHandler(self.console_handler)
 
     def log_output(self):
         with open(self.log_file, 'a') as f:
