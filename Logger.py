@@ -1,7 +1,7 @@
 import logging
 from Utils import read_from_csv
 
-FILTERS_FILE = 'filters.csv'
+STDOUT_FILTERS_FILE = 'filters.csv'
 
 
 class Logger:
@@ -9,21 +9,32 @@ class Logger:
         self.process = process
         self.log_file = log_file
         self.found_warning_or_error = False
-        self.filters = read_from_csv(FILTERS_FILE)
+        self.stdout_filters = read_from_csv(STDOUT_FILTERS_FILE)
 
         self.logger = logging.getLogger(log_file)
         self.logger.setLevel(logging.DEBUG)
+        self.file_handler = self._setup_file_handler(log_file)
+        self.console_handler = self._setup_console_handler()
 
-        self.file_handler = logging.FileHandler(log_file)
-        self.file_handler.setLevel(logging.DEBUG)
-        self.file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
         self.logger.addHandler(self.file_handler)
-
-        self.console_handler = logging.StreamHandler()
-        self.console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
-        self.console_handler.addFilter(
-            lambda record: any(keyword in record.getMessage().lower() for keyword in self.filters))
         self.logger.addHandler(self.console_handler)
+
+    def _setup_file_handler(self, log_file):
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(
+            logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+
+        return file_handler
+
+    def _setup_console_handler(self):
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(
+            logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S'))
+        console_handler.addFilter(
+            lambda record: any(keyword in record.getMessage().lower() for keyword in self.stdout_filters))
+
+        return console_handler
 
     def log_output(self):
         with open(self.log_file, 'a') as f:
@@ -45,12 +56,13 @@ class Logger:
 
     def _log_stderr(self, stderr_line):
         decoded_line = stderr_line.decode().lower()
+        log_message = f'PID {self.process.pid} - {stderr_line.decode().strip()}'
         if "warning" in decoded_line:
-            self.logger.warning(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
+            self.logger.warning(log_message)
         else:
-            self.logger.error(f'PID {self.process.pid} - {stderr_line.decode().strip()}')
+            self.logger.error(log_message)
 
-    def can_be_deleted(self):
+    def can_delete_logfile(self):
         return not self.found_warning_or_error
 
     def close(self):

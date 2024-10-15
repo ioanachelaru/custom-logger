@@ -19,7 +19,7 @@ class ProcessManager:
     def cleanup(self):
         for logger, temp_file in zip(self.loggers, self.temp_files):
             logger.close()
-            if logger.can_be_deleted():
+            if logger.can_delete_logfile():
                 Path(temp_file).unlink()
 
 
